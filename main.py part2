@@ -1,0 +1,53 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str
+    price: float
+    is_offer: Optional[bool] = None
+
+# Data dummy
+items = {
+    "item1": {"name": "Apple", "price": 1.0, "is_offer": False},
+    "item2": {"name": "Banana", "price": 2.5, "is_offer": True},
+    "item3": {"name": "Orange", "price": 3.2, "is_offer": False},
+}
+
+# GET method untuk mendapatkan seluruh data
+@app.get("/items")
+def read_items():
+    return items
+
+# GET method untuk mendapatkan data berdasarkan id
+@app.get("/items/{item_id}")
+def read_item(item_id: str):
+    if item_id not in items:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return items[item_id]
+
+# POST method untuk menambahkan data
+@app.post("/items")
+def create_item(item: Item):
+    items[item.name] = item
+    return items[item.name]
+
+# PUT method untuk mengupdate data
+@app.put("/items/{item_id}")
+def update_item(item_id: str, item: Item):
+    if item_id not in items:
+        raise HTTPException(status_code=404, detail="Item not found")
+    items[item_id].name = item.name
+    items[item_id].price = item.price
+    items[item_id].is_offer = item.is_offer
+    return items[item_id]
+
+# DELETE method untuk menghapus data
+@app.delete("/items/{item_id}")
+def delete_item(item_id: str):
+    if item_id not in items:
+        raise HTTPException(status_code=404, detail="Item not found")
+    del items[item_id]
+    return {"message": "Item deleted successfully"}
