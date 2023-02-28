@@ -1,53 +1,70 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional
 
 app = FastAPI()
 
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Optional[bool] = None
+# model input
+class dataModel(BaseModel):
+    nama: str
+    umur: int 
+    hobi: str
 
-# Data dummy
-items = {
-    "item1": {"name": "Apple", "price": 1.0, "is_offer": False},
-    "item2": {"name": "Banana", "price": 2.5, "is_offer": True},
-    "item3": {"name": "Orange", "price": 3.2, "is_offer": False},
+# data awal
+dataUser = {
+    "adam": {"nama": "adam", "umur": "18", "hobi": "menggambar"},
+    "ivan": {"nama": "ivan", "umur": "18", "hobi": "desain"},
+    "bona": {"nama": "bona", "umur": "18", "hobi": "mancing"}
 }
 
-# GET method untuk mendapatkan seluruh data
-@app.get("/items")
-def read_items():
-    return items
+# tampil
+@app.get("/list/")
+async def read_items():
+    return dataUser
 
-# GET method untuk mendapatkan data berdasarkan id
-@app.get("/items/{item_id}")
-def read_item(item_id: str):
-    if item_id not in items:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return items[item_id]
+# tambah
+@app.post("/tambah/")
+async def tambah(user: dataModel):
+    dic = user.dict()
+    nama = dic["nama"].lower()
+    dataUser[nama] = dic
+    return {"message": "User added successfully"}
 
-# POST method untuk menambahkan data
-@app.post("/items")
-def create_item(item: Item):
-    items[item.name] = item
-    return items[item.name]
+# cari
+@app.get("/cari/{nama}")
+async def baca(nama: str):
+    nama = nama.lower()
+    if nama in dataUser:
+        return dataUser[nama]
+    else:
+        return {"message": "User not found"}
 
-# PUT method untuk mengupdate data
-@app.put("/items/{item_id}")
-def update_item(item_id: str, item: Item):
-    if item_id not in items:
-        raise HTTPException(status_code=404, detail="Item not found")
-    items[item_id].name = item.name
-    items[item_id].price = item.price
-    items[item_id].is_offer = item.is_offer
-    return items[item_id]
+# hapus
+@app.delete("/hapus/{namaUser}")
+async def hapus_char(namaUser: str):
+    namaUser = namaUser.lower()
+    if namaUser in dataUser:
+        del dataUser[namaUser]
+        return {"terhapus"}
+    else:
+        return{"nama tidak ada"}
 
-# DELETE method untuk menghapus data
-@app.delete("/items/{item_id}")
-def delete_item(item_id: str):
-    if item_id not in items:
-        raise HTTPException(status_code=404, detail="Item not found")
-    del items[item_id]
-    return {"message": "Item deleted successfully"}
+# mengganti seluruh data
+@app.put("/update/{nama}")
+async def update_char(nama:str, user:dataModel):
+    nama = nama.lower()
+    if nama in dataUser:
+        dataUser[nama] = user.dict()
+        return{"update berhasil"}
+    else:
+        return{"nama tidak ditemukan"}
+
+# mengganti data yang diinginkan
+@app.patch("/patch/{nama}")
+async def patch_char(nama: str, user:dataModel):
+    nama= nama.lower()
+    if nama in dataUser:
+        up = user.dict(exclude_unset = True)
+        dataUser[nama].update(up)
+        return{"update pada" + nama + "berhasi"}
+    else:
+        return{"data tidak ditemukan"}    
