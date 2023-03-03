@@ -22,24 +22,15 @@ cursor = db.cursor()
 
 # method (get) untuk menampilkan semua data
 @app.get("/list/")
-async def read_items():
+async def menampilkan_data():
     query = "SELECT * FROM siswa"
     cursor.execute(query)
     results = cursor.fetchall()
     return results
 
-# method (post) untuk menambahkan data
-@app.post("/tambah/")
-async def tambah(data: DataModel):
-    query = "INSERT INTO siswa (nama, hobi) VALUES (%s, %s)"
-    values = (data.nama, data.hobi)
-    cursor.execute(query, values)
-    db.commit()
-    return {"message": "Data berhasil ditambahkan"}
-
 # method (get) untuk mencari data berdasarkan ID
 @app.get("/cari/{id}")
-async def baca(id: int):
+async def mencari_data(id: int):
     query = "SELECT * FROM siswa WHERE id = %s"
     values = (id,)
     cursor.execute(query, values)
@@ -48,34 +39,18 @@ async def baca(id: int):
         return {"message": "Data tidak ditemukan"}
     return result
 
-# method (delete) untuk menghapus data berdasarkan ID
-@app.delete("/hapus/{id}")
-async def hapus_data(id: int):
-    query = "DELETE FROM siswa WHERE id = %s"
-    values = (id,)
+# method (post) untuk menambahkan data
+@app.post("/tambah/")
+async def menambah_data(data: DataModel):
+    query = "INSERT INTO siswa (nama, hobi) VALUES (%s, %s)"
+    values = (data.nama, data.hobi)
     cursor.execute(query, values)
     db.commit()
-    if cursor.rowcount > 0:
-        return {"message": "Data berhasil dihapus"}
-    else:
-        return {"message": "Data tidak ditemukan"}
-
-# method (put) untuk mengganti seluruh data
-@app.put("/update/{id}")
-async def update_data(id: int, data: DataModel):
-    query = "UPDATE siswa SET nama = %s, hobi = %s WHERE id = %s"
-    values = (data.nama, data.hobi, id)
-    cursor.execute(query, values)
-    db.commit()
-    if cursor.rowcount > 0:
-        return {"message": "Data berhasil diupdate"}
-    else:
-        return {"message": "Data tidak ditemukan"}
-
+    return {"message": "Data berhasil ditambahkan"}
 
 # method (patch) untuk mengganti data yang diinginkan
 @app.patch("/patch/{id}")
-async def perbarui_item(id: int, data: DataModel):
+async def mengganti_data(id: int, data: DataModel):
     query = "UPDATE siswa SET "
     values = []
     if data.nama:
@@ -91,3 +66,27 @@ async def perbarui_item(id: int, data: DataModel):
     cursor.execute(query, tuple(values))
     db.commit()
     return {"status": "Data berhasil diperbarui"}
+
+# method (delete) untuk menghapus data berdasarkan ID
+@app.delete("/hapus/{id}")
+async def menghapus_data(id: int):
+    query = "DELETE FROM siswa WHERE id = %s"
+    values = (id,)
+    cursor.execute(query, values)
+    db.commit()
+    if cursor.rowcount > 0:
+        return {"message": "Data berhasil dihapus"}
+    else:
+        return {"message": "Data tidak ditemukan"}
+
+# method (put) untuk mengganti seluruh data
+@app.put("/update/{id}")
+async def mengupdate_seluruh_data(id: int, data: DataModel):
+    query = "UPDATE siswa SET nama = %s, hobi = %s WHERE id = %s"
+    values = (data.nama, data.hobi, id)
+    cursor.execute(query, values)
+    db.commit()
+    if cursor.rowcount > 0:
+        return {"message": "Data berhasil diupdate"}
+    else:
+        return {"message": "Data tidak ditemukan"}
