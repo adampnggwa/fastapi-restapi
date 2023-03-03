@@ -1,70 +1,93 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import mysql.connector
 
 app = FastAPI()
 
 # model input
-class dataModel(BaseModel):
+class DataModel(BaseModel):
     nama: str
-    umur: int 
     hobi: str
 
-# data awal
-dataUser = {
-    "adam": {"nama": "adam", "umur": "18", "hobi": "menggambar"},
-    "ivan": {"nama": "ivan", "umur": "18", "hobi": "desain"},
-    "bona": {"nama": "bona", "umur": "18", "hobi": "mancing"}
-}
+# koneksi ke database mysql
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="",
+    database="datauser"
+)
 
-# method (get) tampil
+# membuat objek cursor
+cursor = db.cursor()
+
+# method (get) untuk menampilkan semua data
 @app.get("/list/")
 async def read_items():
-    return dataUser
+    query = "SELECT * FROM siswa"
+    cursor.execute(query)
+    results = cursor.fetchall()
+    return results
 
-# method (post) tambah
+# method (post) untuk menambahkan data
 @app.post("/tambah/")
-async def tambah(user: dataModel):
-    dic = user.dict()
-    nama = dic["nama"].lower()
-    dataUser[nama] = dic
-    return {"message": "User added successfully"}
+async def tambah(data: DataModel):
+    query = "INSERT INTO siswa (nama, hobi) VALUES (%s, %s)"
+    values = (data.nama, data.hobi)
+    cursor.execute(query, values)
+    db.commit()
+    return {"message": "Data berhasil ditambahkan"}
 
-# method (get) cari
-@app.get("/cari/{nama}")
-async def baca(nama: str):
-    nama = nama.lower()
-    if nama in dataUser:
-        return dataUser[nama]
-    else:
-        return {"message": "User not found"}
+# method (get) untuk mencari data berdasarkan ID
+@app.get("/cari/{id}")
+async def baca(id: int):
+    query = "SELECT * FROM siswa WHERE id = %s"
+    values = (id,)
+    cursor.execute(query, values)
+    result = cursor.fetchone()
+    if result is None:
+        return {"message": "Data tidak ditemukan"}
+    return result
 
-# method (delete) hapus
-@app.delete("/hapus/{namaUser}")
-async def hapus_char(namaUser: str):
-    namaUser = namaUser.lower()
-    if namaUser in dataUser:
-        del dataUser[namaUser]
-        return {"terhapus"}
+# method (delete) untuk menghapus data berdasarkan ID
+@app.delete("/hapus/{id}")
+async def hapus_data(id: int):
+    query = "DELETE FROM siswa WHERE id = %s"
+    values = (id,)
+    cursor.execute(query, values)
+    db.commit()
+    if cursor.rowcount > 0:
+        return {"message": "Data berhasil dihapus"}
     else:
-        return{"nama tidak ada"}
+        return {"message": "Data tidak ditemukan"}
 
-# method (put) mengganti seluruh data
-@app.put("/update/{nama}")
-async def update_char(nama:str, user:dataModel):
-    nama = nama.lower()
-    if nama in dataUser:
-        dataUser[nama] = user.dict()
-        return{"update berhasil"}
+# method (put) untuk mengganti seluruh data
+@app.put("/update/{id}")
+async def update_data(id: int, data: DataModel):
+    query = "UPDATE siswa SET nama = %s, hobi = %s WHERE id = %s"
+    values = (data.nama, data.hobi, id)
+    cursor.execute(query, values)
+    db.commit()
+    if cursor.rowcount > 0:
+        return {"message": "Data berhasil diupdate"}
     else:
-        return{"nama tidak ditemukan"}
+        return {"message": "Data tidak ditemukan"}
 
-# method (patch) mengganti data yang diinginkan
-@app.patch("/patch/{nama}")
-async def patch_char(nama: str, user:dataModel):
-    nama= nama.lower()
-    if nama in dataUser:
-        up = user.dict(exclude_unset = True)
-        dataUser[nama].update(up)
-        return{"update pada" + nama + "berhasi"}
-    else:
-        return{"data tidak ditemukan"}    
+
+# method (patch) untuk mengganti data yang diinginkan
+@app.patch("/patch/{id}")
+async def perbarui_item(id: int, data: DataModel):
+    query = "UPDATE siswa SET "
+    values = []
+    if data.nama:
+        query += "nama=%s, "
+        values.append(data.nama)
+    if data.hobi:
+        query += "hobi=%s, "
+        values.append(data.hobi)
+    # hapus koma terakhir pada query
+    query = query[:-2]
+    query += " WHERE id=%s"
+    values.append(id)
+    cursor.execute(query, tuple(values))
+    db.commit()
+    return {"status": "Data berhasil diperbarui"}
