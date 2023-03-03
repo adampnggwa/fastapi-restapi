@@ -16,12 +16,12 @@ dataUser = {
     "bona": {"nama": "bona", "umur": "18", "hobi": "mancing"}
 }
 
-# tampil
+# method (get) tampil
 @app.get("/list/")
 async def read_items():
     return dataUser
 
-# tambah
+# method (post) tambah
 @app.post("/tambah/")
 async def tambah(user: dataModel):
     dic = user.dict()
@@ -29,7 +29,7 @@ async def tambah(user: dataModel):
     dataUser[nama] = dic
     return {"message": "User added successfully"}
 
-# cari
+# method (get) cari
 @app.get("/cari/{nama}")
 async def baca(nama: str):
     nama = nama.lower()
@@ -38,7 +38,7 @@ async def baca(nama: str):
     else:
         return {"message": "User not found"}
 
-# hapus
+# method (delete) hapus
 @app.delete("/hapus/{namaUser}")
 async def hapus_char(namaUser: str):
     namaUser = namaUser.lower()
@@ -48,7 +48,7 @@ async def hapus_char(namaUser: str):
     else:
         return{"nama tidak ada"}
 
-# mengganti seluruh data
+# method (put) mengganti seluruh data
 @app.put("/update/{nama}")
 async def update_char(nama:str, user:dataModel):
     nama = nama.lower()
@@ -58,7 +58,7 @@ async def update_char(nama:str, user:dataModel):
     else:
         return{"nama tidak ditemukan"}
 
-# mengganti data yang diinginkan
+# method (patch) mengganti data yang diinginkan
 @app.patch("/patch/{nama}")
 async def patch_char(nama: str, user:dataModel):
     nama= nama.lower()
